@@ -91,7 +91,7 @@ footer code { font-family: var(--mono); color: var(--text); }
       <div class="stat-row">
         <div><b>26</b>ports &amp; tools</div>
         <div><b>46</b>ESLint rules verified</div>
-        <div><b>2,432</b>rule parity cases</div>
+        <div><b>2,459</b>rule parity cases</div>
         <div><b>14/14</b>CLI scenarios byte-identical</div>
         <div><b>0</b>tolerated mismatches</div>
       </div>
@@ -103,7 +103,7 @@ footer code { font-family: var(--mono); color: var(--text); }
       <p class="tagline">ESLint&#x27;s Linter pipeline in Go — parses with a Go parser, runs real ESLint rules, and its CLI output is byte-identical to eslint 8.57</p>
       <ul>
           <li>Text is parsed in-process by espree-go (a Go port of espree) — no Node runtime, no subprocess.</li>
-          <li>46 ported rules (no-undef, no-unused-vars, prefer-const, semi, quotes, …) run over one traversal, with eslint-scope-go scope analysis behind them, gated by 2,432 oracle cases.</li>
+          <li>46 ported rules (no-undef, no-unused-vars, prefer-const, semi, quotes, …) run over one traversal, with eslint-scope-go scope analysis behind them, gated by 2,459 oracle cases.</li>
           <li>`eslint-go --format stylish src` produces the same bytes as `eslint --format stylish src`: colours, columns, exit codes and the files rewritten by --fix.</li>
           <li>Message objects match field for field — including suggestions, fix ranges, and UTF-16 code-unit columns on non-ASCII input.</li>
           <li>21 leaf packages were ported first (espree, acorn, estraverse, esquery, eslint-scope, …) and are composing here.</li>
@@ -119,7 +119,7 @@ footer code { font-family: var(--mono); color: var(--text); }
         <h3><a href="https://github.com/jclyons52/eslint-go">eslint-go</a></h3>
         <div class="pkg">port of eslint 8.57.0</div>
         <p>Linter.verify/verifyAndFix, SourceCode + token store, report-translator (messages, fixes and suggestions), rule-fixer, formatters and the CLI. This is the composition target of the whole effort.</p>
-        <div class="evidence">46 ported rules over 2,432 oracle cases with 0 mismatches; e2e: 14/14 CLI scenarios byte-identical to eslint 8.57 (stylish, coloured stylish, json, --fix, --quiet, globs, stdin)</div>
+        <div class="evidence">46 ported rules over 2,459 oracle cases with 0 mismatches; e2e: 14/14 CLI scenarios byte-identical to eslint 8.57 (stylish, coloured stylish, json, --fix, --quiet, globs, stdin)</div>
       </article>
       <article class="card">
         <h3><a href="https://github.com/jclyons52/espree-go">espree-go</a></h3>
