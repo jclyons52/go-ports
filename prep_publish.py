@@ -113,6 +113,10 @@ CI_E2E_STEP = """      - name: end-to-end CLI parity
         run: bash scripts/e2e.sh
 """
 
+CI_CASE_COUNT_STEP = """      - name: declared oracle-case count
+        run: bash scripts/rule-case-count.sh
+"""
+
 CI = CI_HEAD + CI_TAIL
 
 
@@ -134,6 +138,8 @@ def ci_yaml(repo):
     parts.append(CI_TAIL)
     if (repo / "scripts" / "e2e.sh").is_file():
         parts.append(CI_E2E_STEP)
+    if (repo / "scripts" / "rule-case-count.sh").is_file():
+        parts.append(CI_CASE_COUNT_STEP)
     return "".join(parts)
 
 
