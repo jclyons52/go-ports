@@ -62,9 +62,10 @@ GITIGNORE = """# Go build output
 *.test
 *.out
 
-# npm oracle (installed locally, never vendored into git)
+# npm oracle (installed locally, never vendored into git).
+# The lockfile IS committed: CI runs `npm ci` from it so the parity tests
+# compare against the real npm package instead of skipping.
 node_modules/
-package-lock.json
 
 # editors / OS
 .DS_Store
@@ -72,7 +73,7 @@ package-lock.json
 .vscode/
 """
 
-CI = """name: CI
+CI_HEAD = """name: CI
 
 on:
   push:
@@ -87,7 +88,16 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: 'stable'
-      - name: gofmt
+"""
+
+CI_ORACLE_STEP = """      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: install the npm oracle
+        run: npm ci --omit=dev --prefix {oracle}
+"""
+
+CI_TAIL = """      - name: gofmt
         run: |
           unformatted="$(gofmt -l .)"
           if [ -n "$unformatted" ]; then
@@ -98,6 +108,33 @@ jobs:
       - name: test
         run: go test ./...
 """
+
+CI_E2E_STEP = """      - name: end-to-end CLI parity
+        run: bash scripts/e2e.sh
+"""
+
+CI = CI_HEAD + CI_TAIL
+
+
+def ci_yaml(repo):
+    """The CI workflow for one repo.
+
+    Repos whose parity harness shells out to the real npm package install that
+    oracle from its committed lockfile, so CI verifies against the original
+    instead of skipping; repos without one just run the Go suite (their parity
+    tests skip, and a skip is never a pass).
+    """
+    oracle = next(
+        (d for d in ("oracle", "original") if (repo / d / "package-lock.json").is_file()),
+        None,
+    )
+    parts = [CI_HEAD]
+    if oracle:
+        parts.append(CI_ORACLE_STEP.format(oracle=oracle))
+    parts.append(CI_TAIL)
+    if (repo / "scripts" / "e2e.sh").is_file():
+        parts.append(CI_E2E_STEP)
+    return "".join(parts)
 
 
 def oracle_license_path(pkg):
@@ -183,11 +220,13 @@ def prepare(repo_name, apply_changes):
         changes.append((".gitignore", GITIGNORE))
         print("  + .gitignore")
 
-    # CI
+    # CI (rewritten when the generated content changed, so the template can be
+    # fixed after publication)
     ci = repo / ".github" / "workflows" / "ci.yml"
-    if not ci.exists():
-        changes.append((".github/workflows/ci.yml", CI))
-        print("  + .github/workflows/ci.yml")
+    want_ci = ci_yaml(repo)
+    if not ci.exists() or ci.read_text() != want_ci:
+        changes.append((".github/workflows/ci.yml", want_ci))
+        print("  + .github/workflows/ci.yml" if not ci.exists() else "  ~ .github/workflows/ci.yml")
 
     untrack = tracked_node_modules(repo)
     if untrack:
