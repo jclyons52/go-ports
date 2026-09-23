@@ -10,7 +10,7 @@ Website: https://jclyons52.github.io/go-ports/ (built from `manifest.json` by `b
 
 The parser → scope analysis → rules pipeline, each layer verified against the npm original it ports.
 
-- **[eslint-go](https://github.com/jclyons52/eslint-go)** — port of `eslint 8.57.0`. Linter.verify/verifyAndFix, SourceCode + token store, report-translator, rule-fixer, formatters and the CLI. This is the composition target of the whole effort. _e2e: 11/11 CLI scenarios byte-identical to eslint 8.57 (stylish, coloured stylish, json, --fix, --quiet, globs, stdin)_
+- **[eslint-go](https://github.com/jclyons52/eslint-go)** — port of `eslint 8.57.0`. Linter.verify/verifyAndFix, SourceCode + token store, report-translator (messages, fixes and suggestions), rule-fixer, formatters and the CLI. This is the composition target of the whole effort. _46 ported rules over 2,437 oracle cases with 0 mismatches; e2e: 11/11 CLI scenarios byte-identical to eslint 8.57 (stylish, coloured stylish, json, --fix, --quiet, globs, stdin)_
 - **[espree-go](https://github.com/jclyons52/espree-go)** — port of `espree 9.6.1`. The ESLint parser: acorn plus espree's post-processing — Program bounds, TemplateElement offsets, loc/range emission, Esprima-style parse errors. _full AST (structure + start/end + loc + range + tokens + comments) identical to espree over the corpus; 19 unparsable inputs with identical message/line/column_
 - **[acorn-go](https://github.com/jclyons52/acorn-go)** — port of `acorn 8.15`. The JavaScript parser itself — the largest single port in the chain (6.4k LOC of parser, tokenizer and scope logic). _91/91 JS-oracle cases including dynamic import() and import.meta_
 - **[eslint-scope-go](https://github.com/jclyons52/eslint-scope-go)** — port of `eslint-scope 7.2.2`. Scope analysis: nested scopes, variables, references, through-references — what makes no-undef / no-unused-vars / no-shadow possible. _40 cases comparing a canonical ScopeManager serialization, 0 mismatches_
@@ -54,3 +54,39 @@ The machinery that made the ports above affordable — and the ports of develope
 3. Run the same corpus through the Go implementation and diff the results: full JSON ASTs for parsers, message objects for linters, byte-for-byte output for code generators and fixers.
 4. Treat any difference as a bug in the port. When the difference is caused by the original's own behaviour, encode that behaviour deliberately and say so in the README.
 5. Commit only when the harness reports zero mismatches, and keep the number in the repo's README so it can be re-checked.
+
+## Using them
+
+Each repository is a plain Go module with a tagged release and no runtime dependency on Node or the npm package it ports. The vendored npm code is test-time only, under oracle/.
+
+**run the linter**
+
+```sh
+go install github.com/jclyons52/eslint-go/cmd/eslint-go@latest
+
+eslint-go --format stylish src/
+```
+
+**parse or scope in-process**
+
+```sh
+go get github.com/jclyons52/espree-go@v0.1.0
+
+go get github.com/jclyons52/eslint-scope-go@v0.1.0
+```
+
+**write a rule against the Go API**
+
+```sh
+import eslint "github.com/jclyons52/eslint-go"
+
+eslint.NewLinter(myRules...).Verify(src, cfg, "a.js")
+```
+
+**the toolchain behind the ports**
+
+```sh
+go install github.com/jclyons52/uplift@latest
+
+uplift measure ./some-js-package --json
+```

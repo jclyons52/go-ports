@@ -76,6 +76,10 @@ footer { margin-top: 70px; padding-top: 22px; border-top: 1px solid var(--line);
 footer code { font-family: var(--mono); color: var(--text); }
 .stat-row { display: flex; gap: 26px; flex-wrap: wrap; margin: 22px 0 0; font-family: var(--mono); font-size: 13px; color: var(--muted); }
 .stat-row b { display: block; font-size: 24px; color: var(--text); font-weight: 600; }
+.snippets { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); }
+.snippet { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 16px 18px; min-width: 0; }
+.snippet h3 { margin: 0 0 10px; font: 13px var(--mono); color: var(--warn); text-transform: lowercase; letter-spacing: .04em; }
+.snippet pre { margin: 0; font: 12.5px/1.7 var(--mono); color: var(--text); overflow-x: auto; white-space: pre; }
 </style>
 </head>
 <body>
@@ -86,10 +90,12 @@ footer code { font-family: var(--mono); color: var(--text); }
       <p class="sub">Each project below is a Go implementation of a JavaScript/npm library or tool. None of them are &#x27;inspired by&#x27; rewrites: every one carries a parity harness that runs the real npm package as the oracle and fails when the Go output differs. The numbers on this page are the gate results from those harnesses.</p>
       <div class="stat-row">
         <div><b>26</b>ports &amp; tools</div>
+        <div><b>46</b>ESLint rules verified</div>
+        <div><b>2,437</b>rule parity cases</div>
+        <div><b>14/14</b>CLI scenarios byte-identical</div>
         <div><b>0</b>tolerated mismatches</div>
-        <div><b>npm</b>package as the oracle</div>
       </div>
-      <nav class="toc"><a href="#core">The ESLint chain</a> <a href="#leaves">Leaf packages</a> <a href="#tooling">Tooling</a> <a href="#method">How a port is verified</a></nav>
+      <nav class="toc"><a href="#core">The ESLint chain</a> <a href="#leaves">Leaf packages</a> <a href="#tooling">Tooling</a> <a href="#consume">Using them</a> <a href="#method">How a port is verified</a></nav>
     </header>
 
     <section id="highlight" class="hero">
@@ -97,8 +103,9 @@ footer code { font-family: var(--mono); color: var(--text); }
       <p class="tagline">ESLint&#x27;s Linter pipeline in Go — parses with a Go parser, runs real ESLint rules, and its CLI output is byte-identical to eslint 8.57</p>
       <ul>
           <li>Text is parsed in-process by espree-go (a Go port of espree) — no Node runtime, no subprocess.</li>
-          <li>Runs ported ESLint rules over one traversal, with eslint-scope-go scope analysis behind them.</li>
+          <li>46 ported rules (no-undef, no-unused-vars, prefer-const, semi, quotes, …) run over one traversal, with eslint-scope-go scope analysis behind them, gated by 2,437 oracle cases.</li>
           <li>`eslint-go --format stylish src` produces the same bytes as `eslint --format stylish src`: colours, columns, exit codes and the files rewritten by --fix.</li>
+          <li>Message objects match field for field — including suggestions, fix ranges, and UTF-16 code-unit columns on non-ASCII input.</li>
           <li>21 leaf packages were ported first (espree, acorn, estraverse, esquery, eslint-scope, …) and are composing here.</li>
       </ul>
       <p style="margin:16px 0 0"><a href="https://github.com/jclyons52/eslint-go">https://github.com/jclyons52/eslint-go</a></p>
@@ -111,8 +118,8 @@ footer code { font-family: var(--mono); color: var(--text); }
       <article class="card">
         <h3><a href="https://github.com/jclyons52/eslint-go">eslint-go</a></h3>
         <div class="pkg">port of eslint 8.57.0</div>
-        <p>Linter.verify/verifyAndFix, SourceCode + token store, report-translator, rule-fixer, formatters and the CLI. This is the composition target of the whole effort.</p>
-        <div class="evidence">e2e: 11/11 CLI scenarios byte-identical to eslint 8.57 (stylish, coloured stylish, json, --fix, --quiet, globs, stdin)</div>
+        <p>Linter.verify/verifyAndFix, SourceCode + token store, report-translator (messages, fixes and suggestions), rule-fixer, formatters and the CLI. This is the composition target of the whole effort.</p>
+        <div class="evidence">46 ported rules over 2,437 oracle cases with 0 mismatches; e2e: 11/11 CLI scenarios byte-identical to eslint 8.57 (stylish, coloured stylish, json, --fix, --quiet, globs, stdin)</div>
       </article>
       <article class="card">
         <h3><a href="https://github.com/jclyons52/espree-go">espree-go</a></h3>
@@ -276,6 +283,37 @@ footer code { font-family: var(--mono); color: var(--text); }
         <p>Go port of the typewryter CLI for generating TypeScript types from data.</p>
         <div class="evidence">output parity against the original CLI</div>
       </article>
+      </div>
+    </section>
+
+    <section id="consume">
+      <h2>Using them</h2>
+      <p class="blurb">Each repository is a plain Go module with a tagged release and no runtime dependency on Node or the npm package it ports. The vendored npm code is test-time only, under oracle/.</p>
+      <div class="snippets">
+      <div class="snippet">
+        <h3>run the linter</h3>
+        <pre>go install github.com/jclyons52/eslint-go/cmd/eslint-go@latest
+
+eslint-go --format stylish src/</pre>
+      </div>
+      <div class="snippet">
+        <h3>parse or scope in-process</h3>
+        <pre>go get github.com/jclyons52/espree-go@v0.1.0
+
+go get github.com/jclyons52/eslint-scope-go@v0.1.0</pre>
+      </div>
+      <div class="snippet">
+        <h3>write a rule against the Go API</h3>
+        <pre>import eslint &quot;github.com/jclyons52/eslint-go&quot;
+
+eslint.NewLinter(myRules...).Verify(src, cfg, &quot;a.js&quot;)</pre>
+      </div>
+      <div class="snippet">
+        <h3>the toolchain behind the ports</h3>
+        <pre>go install github.com/jclyons52/uplift@latest
+
+uplift measure ./some-js-package --json</pre>
+      </div>
       </div>
     </section>
 

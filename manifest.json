@@ -3,7 +3,14 @@
     "title": "Go ports of JavaScript tooling",
     "subtitle": "npm packages rebuilt in Go, verified against the originals",
     "owner": "jclyons52",
-    "intro": "Each project below is a Go implementation of a JavaScript/npm library or tool. None of them are 'inspired by' rewrites: every one carries a parity harness that runs the real npm package as the oracle and fails when the Go output differs. The numbers on this page are the gate results from those harnesses."
+    "intro": "Each project below is a Go implementation of a JavaScript/npm library or tool. None of them are 'inspired by' rewrites: every one carries a parity harness that runs the real npm package as the oracle and fails when the Go output differs. The numbers on this page are the gate results from those harnesses.",
+    "stats": [
+      { "value": "26", "label": "ports & tools" },
+      { "value": "46", "label": "ESLint rules verified" },
+      { "value": "2,437", "label": "rule parity cases" },
+      { "value": "14/14", "label": "CLI scenarios byte-identical" },
+      { "value": "0", "label": "tolerated mismatches" }
+    ]
   },
   "highlight": {
     "name": "eslint-go",
@@ -11,8 +18,9 @@
     "tagline": "ESLint's Linter pipeline in Go — parses with a Go parser, runs real ESLint rules, and its CLI output is byte-identical to eslint 8.57",
     "points": [
       "Text is parsed in-process by espree-go (a Go port of espree) — no Node runtime, no subprocess.",
-      "Runs ported ESLint rules over one traversal, with eslint-scope-go scope analysis behind them.",
+      "46 ported rules (no-undef, no-unused-vars, prefer-const, semi, quotes, …) run over one traversal, with eslint-scope-go scope analysis behind them, gated by 2,437 oracle cases.",
       "`eslint-go --format stylish src` produces the same bytes as `eslint --format stylish src`: colours, columns, exit codes and the files rewritten by --fix.",
+      "Message objects match field for field — including suggestions, fix ranges, and UTF-16 code-unit columns on non-ASCII input.",
       "21 leaf packages were ported first (espree, acorn, estraverse, esquery, eslint-scope, …) and are composing here."
     ]
   },
@@ -25,8 +33,8 @@
         {
           "repo": "eslint-go",
           "pkg": "eslint 8.57.0",
-          "desc": "Linter.verify/verifyAndFix, SourceCode + token store, report-translator, rule-fixer, formatters and the CLI. This is the composition target of the whole effort.",
-          "evidence": "e2e: 11/11 CLI scenarios byte-identical to eslint 8.57 (stylish, coloured stylish, json, --fix, --quiet, globs, stdin)",
+          "desc": "Linter.verify/verifyAndFix, SourceCode + token store, report-translator (messages, fixes and suggestions), rule-fixer, formatters and the CLI. This is the composition target of the whole effort.",
+          "evidence": "46 ported rules over 2,437 oracle cases with 0 mismatches; e2e: 11/11 CLI scenarios byte-identical to eslint 8.57 (stylish, coloured stylish, json, --fix, --quiet, globs, stdin)",
           "lang": "Go"
         },
         {
@@ -125,6 +133,16 @@
       ]
     }
   ],
+  "consume": {
+    "title": "Using them",
+    "blurb": "Each repository is a plain Go module with a tagged release and no runtime dependency on Node or the npm package it ports. The vendored npm code is test-time only, under oracle/.",
+    "snippets": [
+      { "label": "run the linter", "code": "go install github.com/jclyons52/eslint-go/cmd/eslint-go@latest\n\neslint-go --format stylish src/" },
+      { "label": "parse or scope in-process", "code": "go get github.com/jclyons52/espree-go@v0.1.0\n\ngo get github.com/jclyons52/eslint-scope-go@v0.1.0" },
+      { "label": "write a rule against the Go API", "code": "import eslint \"github.com/jclyons52/eslint-go\"\n\neslint.NewLinter(myRules...).Verify(src, cfg, \"a.js\")" },
+      { "label": "the toolchain behind the ports", "code": "go install github.com/jclyons52/uplift@latest\n\nuplift measure ./some-js-package --json" }
+    ]
+  },
   "method": {
     "title": "How a port is verified",
     "steps": [

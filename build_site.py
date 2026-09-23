@@ -83,6 +83,10 @@ footer { margin-top: 70px; padding-top: 22px; border-top: 1px solid var(--line);
 footer code { font-family: var(--mono); color: var(--text); }
 .stat-row { display: flex; gap: 26px; flex-wrap: wrap; margin: 22px 0 0; font-family: var(--mono); font-size: 13px; color: var(--muted); }
 .stat-row b { display: block; font-size: 24px; color: var(--text); font-weight: 600; }
+.snippets { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); }
+.snippet { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 16px 18px; min-width: 0; }
+.snippet h3 { margin: 0 0 10px; font: 13px var(--mono); color: var(--warn); text-transform: lowercase; letter-spacing: .04em; }
+.snippet pre { margin: 0; font: 12.5px/1.7 var(--mono); color: var(--text); overflow-x: auto; white-space: pre; }
 """
 
 
@@ -123,6 +127,24 @@ def build():
 
     all_repos = [r for s in sections for r in s["repos"]]
     repo_count = len(all_repos)
+    consume = data.get("consume")
+    if consume:
+        snippets = "\n".join(
+            f"""      <div class="snippet">
+        <h3>{esc(s['label'])}</h3>
+        <pre>{esc(s['code'])}</pre>
+      </div>"""
+            for s in consume["snippets"]
+        )
+        consume_html = f"""    <section id="consume">
+      <h2>{esc(consume['title'])}</h2>
+      <p class="blurb">{esc(consume['blurb'])}</p>
+      <div class="snippets">
+{snippets}
+      </div>
+    </section>"""
+    else:
+        consume_html = ""
 
     toc = " ".join(
         f'<a href="#{esc(s["id"])}">{esc(s["title"])}</a>' for s in sections
@@ -130,6 +152,15 @@ def build():
     hero_points = "\n".join(f"          <li>{p}</li>" for p in hero["points"])
     method_steps = "\n".join(f"          <li>{s}</li>" for s in method["steps"])
     body_sections = "\n".join(render_section(s) for s in sections)
+
+    stats = site.get("stats") or [
+        {"value": str(repo_count), "label": "ports & tools"},
+        {"value": "0", "label": "tolerated mismatches"},
+        {"value": "npm", "label": "package as the oracle"},
+    ]
+    stat_row = "\n".join(
+        f'        <div><b>{esc(s["value"])}</b>{esc(s["label"])}</div>' for s in stats
+    )
 
     page = f"""<!doctype html>
 <html lang="en">
@@ -147,11 +178,9 @@ def build():
       <h1>{esc(site['title'])}<br><span class="accent">{esc(site['subtitle'])}</span></h1>
       <p class="sub">{esc(site['intro'])}</p>
       <div class="stat-row">
-        <div><b>{repo_count}</b>ports &amp; tools</div>
-        <div><b>0</b>tolerated mismatches</div>
-        <div><b>npm</b>package as the oracle</div>
+{stat_row}
       </div>
-      <nav class="toc">{toc} <a href="#method">How a port is verified</a></nav>
+      <nav class="toc">{toc} <a href="#consume">Using them</a> <a href="#method">How a port is verified</a></nav>
     </header>
 
     <section id="highlight" class="hero">
@@ -164,6 +193,8 @@ def build():
     </section>
 
 {body_sections}
+
+{consume_html}
 
     <section id="method" class="method">
       <h2>{esc(method['title'])}</h2>
@@ -208,6 +239,18 @@ def build():
     readme.append("")
     readme.extend(f"{i}. {s}" for i, s in enumerate(method["steps"], 1))
     readme.append("")
+    if consume:
+        readme.append(f"## {consume['title']}")
+        readme.append("")
+        readme.append(consume["blurb"])
+        readme.append("")
+        for snippet in consume["snippets"]:
+            readme.append(f"**{snippet['label']}**")
+            readme.append("")
+            readme.append("```sh")
+            readme.append(snippet["code"])
+            readme.append("```")
+            readme.append("")
     (ROOT / "README.md").write_text("\n".join(readme))
 
     print(f"wrote index.html ({len(page)} bytes), README.md, {repo_count} repos")
