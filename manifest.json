@@ -1,0 +1,138 @@
+{
+  "site": {
+    "title": "Go ports of JavaScript tooling",
+    "subtitle": "npm packages rebuilt in Go, verified against the originals",
+    "owner": "jclyons52",
+    "intro": "Each project below is a Go implementation of a JavaScript/npm library or tool. None of them are 'inspired by' rewrites: every one carries a parity harness that runs the real npm package as the oracle and fails when the Go output differs. The numbers on this page are the gate results from those harnesses."
+  },
+  "highlight": {
+    "name": "eslint-go",
+    "repo": "eslint-go",
+    "tagline": "ESLint's Linter pipeline in Go — parses with a Go parser, runs real ESLint rules, and its CLI output is byte-identical to eslint 8.57",
+    "points": [
+      "Text is parsed in-process by espree-go (a Go port of espree) — no Node runtime, no subprocess.",
+      "Runs ported ESLint rules over one traversal, with eslint-scope-go scope analysis behind them.",
+      "`eslint-go --format stylish src` produces the same bytes as `eslint --format stylish src`: colours, columns, exit codes and the files rewritten by --fix.",
+      "21 leaf packages were ported first (espree, acorn, estraverse, esquery, eslint-scope, …) and are composing here."
+    ]
+  },
+  "sections": [
+    {
+      "id": "core",
+      "title": "The ESLint chain",
+      "blurb": "The parser → scope analysis → rules pipeline, each layer verified against the npm original it ports.",
+      "repos": [
+        {
+          "repo": "eslint-go",
+          "pkg": "eslint 8.57.0",
+          "desc": "Linter.verify/verifyAndFix, SourceCode + token store, report-translator, rule-fixer, formatters and the CLI. This is the composition target of the whole effort.",
+          "evidence": "e2e: 11/11 CLI scenarios byte-identical to eslint 8.57 (stylish, coloured stylish, json, --fix, --quiet, globs, stdin)",
+          "lang": "Go"
+        },
+        {
+          "repo": "espree-go",
+          "pkg": "espree 9.6.1",
+          "desc": "The ESLint parser: acorn plus espree's post-processing — Program bounds, TemplateElement offsets, loc/range emission, Esprima-style parse errors.",
+          "evidence": "full AST (structure + start/end + loc + range + tokens + comments) identical to espree over the corpus; 19 unparsable inputs with identical message/line/column",
+          "lang": "Go"
+        },
+        {
+          "repo": "acorn-go",
+          "pkg": "acorn 8.15",
+          "desc": "The JavaScript parser itself — the largest single port in the chain (6.4k LOC of parser, tokenizer and scope logic).",
+          "evidence": "91/91 JS-oracle cases including dynamic import() and import.meta",
+          "lang": "Go"
+        },
+        {
+          "repo": "eslint-scope-go",
+          "pkg": "eslint-scope 7.2.2",
+          "desc": "Scope analysis: nested scopes, variables, references, through-references — what makes no-undef / no-unused-vars / no-shadow possible.",
+          "evidence": "40 cases comparing a canonical ScopeManager serialization, 0 mismatches",
+          "lang": "Go"
+        },
+        {
+          "repo": "estraverse-go",
+          "pkg": "estraverse 5.3.0",
+          "desc": "AST traversal with visitor keys, plus replace/attachComments.",
+          "evidence": "traversal order, replace/remove, parent arguments and visitor-keys table all match the oracle",
+          "lang": "Go"
+        },
+        {
+          "repo": "esquery-go",
+          "pkg": "esquery 1.7.0",
+          "desc": "The selector engine behind ESLint's inline rule configuration and `--rule` selectors.",
+          "evidence": "1850 parse + 29874 query + 6786 matches (94024 node results) cases, 0 mismatches",
+          "lang": "Go"
+        }
+      ]
+    },
+    {
+      "id": "leaves",
+      "title": "Leaf packages",
+      "blurb": "The dependency leaves ESLint pulls in, ported one repo each — code, tests and the JS oracle that decides whether the port is done.",
+      "repos": [
+        { "repo": "prelude-ls-go", "pkg": "prelude-ls 1.2.1", "desc": "Prelude.ls functional helpers (option/obj/str/func/list).", "evidence": "1.2.1 subset parity suite green", "lang": "Go" },
+        { "repo": "argparse-go", "pkg": "argparse 2.0.1", "desc": "Python-style argument parsing — ported from the JS port of the Python library.", "evidence": "parity suite green against the npm original", "lang": "Go" },
+        { "repo": "ignore-go", "pkg": "ignore 5.3.2", "desc": "gitignore semantics for ignore files and pattern matching.", "evidence": "parity suite green", "lang": "Go" },
+        { "repo": "uri-js-go", "pkg": "uri-js 4.4.1", "desc": "URI parsing/serialization and normalization.", "evidence": "parity suite green", "lang": "Go" },
+        { "repo": "lodash-merge-go", "pkg": "lodash.merge 4.6.2", "desc": "Deep merge with lodash's exact coercion rules.", "evidence": "42/42 byte-parity cases (string/array-like sources, length resize, __proto__, typed arrays)", "lang": "Go" },
+        { "repo": "json-schema-traverse-go", "pkg": "json-schema-traverse 0.4.1", "desc": "Schema traversal callbacks for JSON Schema validation.", "evidence": "event-sequence parity against the oracle", "lang": "Go" },
+        { "repo": "eslint-community-regexpp", "pkg": "@eslint-community/regexpp 4.12.1", "desc": "Regular-expression parser with full ES2024 syntax, including v-mode and modifier groups.", "evidence": "62/62 byte-parity including named groups, v-mode, modifier groups", "lang": "Go" },
+        { "repo": "flatted-go", "pkg": "flatted 3.4.4", "desc": "Circular-JSON parse/stringify.", "evidence": "28/28 round-trip + 13/13 byte-parity", "lang": "Go" },
+        { "repo": "debug-go", "pkg": "debug 4.3.4", "desc": "The namespace-based debug logger's core.", "evidence": "namespace-matching parity", "lang": "Go" },
+        { "repo": "ungap-structured-clone-go", "pkg": "@ungap/structured-clone 1.3.3", "desc": "Structured clone (serialize/deserialize) including Map/Set/Date/RegExp.", "evidence": "round-trip 29/0, structural 15/0", "lang": "Go" },
+        { "repo": "humanwhocodes-object-schema-go", "pkg": "@humanwhocodes/object-schema 1.2.1", "desc": "Object schema validation/merge strategies.", "evidence": "parity suite green", "lang": "Go" },
+        { "repo": "nodelib-fs-stat-go", "pkg": "@nodelib/fs.stat 2.0.5", "desc": "Filesystem stat with a symlink policy.", "evidence": "symlink-policy parity", "lang": "Go" },
+        { "repo": "isexe-go", "pkg": "isexe 2.0.0", "desc": "Executable permission checks.", "evidence": "permission-matrix parity", "lang": "Go" },
+        { "repo": "esutils-go", "pkg": "esutils 2.0.3", "desc": "AST/code/keyword helpers used across the estools family.", "evidence": "parity suite green", "lang": "Go" },
+        { "repo": "color-name-go", "pkg": "color-name 1.1.4", "desc": "CSS colour-name table.", "evidence": "148 entries, 0 mismatches", "lang": "Go" },
+        { "repo": "eslint-visitor-keys-go", "pkg": "eslint-visitor-keys 3.4.3", "desc": "The canonical ESTree visitor-keys table ESLint traverses by.", "evidence": "table parity against the oracle", "lang": "Go" }
+      ]
+    },
+    {
+      "id": "tooling",
+      "title": "Tooling",
+      "blurb": "The machinery that made the ports above affordable — and the ports of developer tooling in their own right.",
+      "repos": [
+        {
+          "repo": "uplift",
+          "pkg": "JS → Go toolchain",
+          "desc": "The pipeline used for every port: measure a JS codebase, resolve its npm→Go counterpart registry, scaffold a repo with a real parity harness, ingest .d.ts contracts, and transpile/lift where that is cheaper than hand-porting.",
+          "evidence": "registry verdicts (port / use_existing / stdlib / inline) so a leaf is assessed once, never re-derived",
+          "lang": "Go"
+        },
+        {
+          "repo": "ts-go-morph",
+          "pkg": "ts-morph",
+          "desc": "Go port of ts-morph (TypeScript AST manipulation) — the TypeScript-side counterpart of the parser chain.",
+          "evidence": "baseline suite against the original",
+          "lang": "Go"
+        },
+        {
+          "repo": "go-gqlcodegen",
+          "pkg": "GraphQL Code Generator",
+          "desc": "Native Go port of GraphQL Code Generator: byte-identical TypeScript output, ~90x faster cold start, no Node runtime.",
+          "evidence": "generated output byte-identical to the npm tool",
+          "lang": "Go"
+        },
+        {
+          "repo": "go-typewryter",
+          "pkg": "typewryter",
+          "desc": "Go port of the typewryter CLI for generating TypeScript types from data.",
+          "evidence": "output parity against the original CLI",
+          "lang": "Go"
+        }
+      ]
+    }
+  ],
+  "method": {
+    "title": "How a port is verified",
+    "steps": [
+      "Vendor the original npm package next to the Go code — the oracle, not a reference to read.",
+      "Build a corpus of real inputs (valid, invalid, edge, non-ASCII) and a driver that runs the original package over it.",
+      "Run the same corpus through the Go implementation and diff the results: full JSON ASTs for parsers, message objects for linters, byte-for-byte output for code generators and fixers.",
+      "Treat any difference as a bug in the port. When the difference is caused by the original's own behaviour, encode that behaviour deliberately and say so in the README.",
+      "Commit only when the harness reports zero mismatches, and keep the number in the repo's README so it can be re-checked."
+    ]
+  }
+}

@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Go ports of JavaScript tooling — jclyons52</title>
+<meta name="description" content="npm packages rebuilt in Go, verified against the originals">
+<style>
+:root {
+  --bg: #0b0d10;
+  --panel: #12151a;
+  --panel-2: #161a21;
+  --line: #232833;
+  --text: #dfe3ea;
+  --muted: #8b94a3;
+  --accent: #4cc2ff;
+  --accent-2: #7ee787;
+  --warn: #ffb454;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: radial-gradient(1200px 600px at 20% -10%, #14202b 0%, var(--bg) 55%) fixed;
+  color: var(--text);
+  font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 22px 96px; }
+header.top { padding: 76px 0 40px; border-bottom: 1px solid var(--line); }
+.eyebrow { font: 12px/1.4 var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+h1 { font-size: clamp(30px, 4.6vw, 50px); line-height: 1.1; margin: 14px 0 10px; letter-spacing: -0.02em; }
+h1 .accent { color: var(--accent-2); }
+.sub { color: var(--muted); font-size: 17px; max-width: 62ch; }
+.hero {
+  margin: 36px 0 0; padding: 26px 26px 22px; border: 1px solid var(--line);
+  border-radius: 14px; background: linear-gradient(180deg, var(--panel-2), var(--panel));
+}
+.hero h2 { margin: 0 0 6px; font-size: 24px; font-family: var(--mono); }
+.hero .tagline { color: var(--text); margin: 0 0 16px; max-width: 78ch; }
+.hero ul { margin: 0; padding-left: 20px; color: var(--muted); }
+.hero li { margin: 6px 0; }
+.hero li strong { color: var(--text); font-weight: 600; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 10px; margin: 26px 0 0; font: 13px var(--mono); }
+nav.toc a { border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; color: var(--muted); }
+nav.toc a:hover { color: var(--text); border-color: #313846; text-decoration: none; }
+section { margin-top: 60px; }
+section > h2 { font-size: 22px; margin: 0 0 6px; font-family: var(--mono); }
+section > p.blurb { color: var(--muted); margin: 0 0 22px; max-width: 80ch; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); }
+.card {
+  border: 1px solid var(--line); border-radius: 12px; padding: 18px 18px 16px;
+  background: var(--panel); display: flex; flex-direction: column;
+}
+.card h3 { margin: 0 0 4px; font-size: 16px; font-family: var(--mono); }
+.card h3 a { color: var(--text); }
+.card .pkg { font: 12px var(--mono); color: var(--warn); margin-bottom: 10px; }
+.card p { margin: 0 0 12px; color: var(--muted); font-size: 14.5px; }
+.card .evidence {
+  margin-top: auto; font: 12.5px/1.5 var(--mono); color: var(--accent-2);
+  border-top: 1px dashed var(--line); padding-top: 10px;
+}
+.card .evidence::before { content: "✓ "; color: var(--accent-2); }
+.method ol { counter-reset: step; list-style: none; padding: 0; margin: 0; }
+.method li { counter-increment: step; position: relative; padding: 0 0 16px 46px; color: var(--muted); }
+.method li::before {
+  content: counter(step); position: absolute; left: 0; top: 0;
+  width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--panel-2); color: var(--accent); font: 13px/28px var(--mono); text-align: center;
+}
+.method li strong { color: var(--text); }
+footer { margin-top: 70px; padding-top: 22px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13.5px; }
+footer code { font-family: var(--mono); color: var(--text); }
+.stat-row { display: flex; gap: 26px; flex-wrap: wrap; margin: 22px 0 0; font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.stat-row b { display: block; font-size: 24px; color: var(--text); font-weight: 600; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="eyebrow">verification-driven ports</div>
+      <h1>Go ports of JavaScript tooling<br><span class="accent">npm packages rebuilt in Go, verified against the originals</span></h1>
+      <p class="sub">Each project below is a Go implementation of a JavaScript/npm library or tool. None of them are &#x27;inspired by&#x27; rewrites: every one carries a parity harness that runs the real npm package as the oracle and fails when the Go output differs. The numbers on this page are the gate results from those harnesses.</p>
+      <div class="stat-row">
+        <div><b>26</b>ports &amp; tools</div>
+        <div><b>0</b>tolerated mismatches</div>
+        <div><b>npm</b>package as the oracle</div>
+      </div>
+      <nav class="toc"><a href="#core">The ESLint chain</a> <a href="#leaves">Leaf packages</a> <a href="#tooling">Tooling</a> <a href="#method">How a port is verified</a></nav>
+    </header>
+
+    <section id="highlight" class="hero">
+      <h2>eslint-go</h2>
+      <p class="tagline">ESLint&#x27;s Linter pipeline in Go — parses with a Go parser, runs real ESLint rules, and its CLI output is byte-identical to eslint 8.57</p>
+      <ul>
+          <li>Text is parsed in-process by espree-go (a Go port of espree) — no Node runtime, no subprocess.</li>
+          <li>Runs ported ESLint rules over one traversal, with eslint-scope-go scope analysis behind them.</li>
+          <li>`eslint-go --format stylish src` produces the same bytes as `eslint --format stylish src`: colours, columns, exit codes and the files rewritten by --fix.</li>
+          <li>21 leaf packages were ported first (espree, acorn, estraverse, esquery, eslint-scope, …) and are composing here.</li>
+      </ul>
+      <p style="margin:16px 0 0"><a href="https://github.com/jclyons52/eslint-go">https://github.com/jclyons52/eslint-go</a></p>
+    </section>
+
+    <section id="core">
+      <h2>The ESLint chain</h2>
+      <p class="blurb">The parser → scope analysis → rules pipeline, each layer verified against the npm original it ports.</p>
+      <div class="grid">
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/eslint-go">eslint-go</a></h3>
+        <div class="pkg">port of eslint 8.57.0</div>
+        <p>Linter.verify/verifyAndFix, SourceCode + token store, report-translator, rule-fixer, formatters and the CLI. This is the composition target of the whole effort.</p>
+        <div class="evidence">e2e: 11/11 CLI scenarios byte-identical to eslint 8.57 (stylish, coloured stylish, json, --fix, --quiet, globs, stdin)</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/espree-go">espree-go</a></h3>
+        <div class="pkg">port of espree 9.6.1</div>
+        <p>The ESLint parser: acorn plus espree&#x27;s post-processing — Program bounds, TemplateElement offsets, loc/range emission, Esprima-style parse errors.</p>
+        <div class="evidence">full AST (structure + start/end + loc + range + tokens + comments) identical to espree over the corpus; 19 unparsable inputs with identical message/line/column</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/acorn-go">acorn-go</a></h3>
+        <div class="pkg">port of acorn 8.15</div>
+        <p>The JavaScript parser itself — the largest single port in the chain (6.4k LOC of parser, tokenizer and scope logic).</p>
+        <div class="evidence">91/91 JS-oracle cases including dynamic import() and import.meta</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/eslint-scope-go">eslint-scope-go</a></h3>
+        <div class="pkg">port of eslint-scope 7.2.2</div>
+        <p>Scope analysis: nested scopes, variables, references, through-references — what makes no-undef / no-unused-vars / no-shadow possible.</p>
+        <div class="evidence">40 cases comparing a canonical ScopeManager serialization, 0 mismatches</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/estraverse-go">estraverse-go</a></h3>
+        <div class="pkg">port of estraverse 5.3.0</div>
+        <p>AST traversal with visitor keys, plus replace/attachComments.</p>
+        <div class="evidence">traversal order, replace/remove, parent arguments and visitor-keys table all match the oracle</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/esquery-go">esquery-go</a></h3>
+        <div class="pkg">port of esquery 1.7.0</div>
+        <p>The selector engine behind ESLint&#x27;s inline rule configuration and `--rule` selectors.</p>
+        <div class="evidence">1850 parse + 29874 query + 6786 matches (94024 node results) cases, 0 mismatches</div>
+      </article>
+      </div>
+    </section>
+    <section id="leaves">
+      <h2>Leaf packages</h2>
+      <p class="blurb">The dependency leaves ESLint pulls in, ported one repo each — code, tests and the JS oracle that decides whether the port is done.</p>
+      <div class="grid">
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/prelude-ls-go">prelude-ls-go</a></h3>
+        <div class="pkg">port of prelude-ls 1.2.1</div>
+        <p>Prelude.ls functional helpers (option/obj/str/func/list).</p>
+        <div class="evidence">1.2.1 subset parity suite green</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/argparse-go">argparse-go</a></h3>
+        <div class="pkg">port of argparse 2.0.1</div>
+        <p>Python-style argument parsing — ported from the JS port of the Python library.</p>
+        <div class="evidence">parity suite green against the npm original</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/ignore-go">ignore-go</a></h3>
+        <div class="pkg">port of ignore 5.3.2</div>
+        <p>gitignore semantics for ignore files and pattern matching.</p>
+        <div class="evidence">parity suite green</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/uri-js-go">uri-js-go</a></h3>
+        <div class="pkg">port of uri-js 4.4.1</div>
+        <p>URI parsing/serialization and normalization.</p>
+        <div class="evidence">parity suite green</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/lodash-merge-go">lodash-merge-go</a></h3>
+        <div class="pkg">port of lodash.merge 4.6.2</div>
+        <p>Deep merge with lodash&#x27;s exact coercion rules.</p>
+        <div class="evidence">42/42 byte-parity cases (string/array-like sources, length resize, __proto__, typed arrays)</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/json-schema-traverse-go">json-schema-traverse-go</a></h3>
+        <div class="pkg">port of json-schema-traverse 0.4.1</div>
+        <p>Schema traversal callbacks for JSON Schema validation.</p>
+        <div class="evidence">event-sequence parity against the oracle</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/eslint-community-regexpp">eslint-community-regexpp</a></h3>
+        <div class="pkg">port of @eslint-community/regexpp 4.12.1</div>
+        <p>Regular-expression parser with full ES2024 syntax, including v-mode and modifier groups.</p>
+        <div class="evidence">62/62 byte-parity including named groups, v-mode, modifier groups</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/flatted-go">flatted-go</a></h3>
+        <div class="pkg">port of flatted 3.4.4</div>
+        <p>Circular-JSON parse/stringify.</p>
+        <div class="evidence">28/28 round-trip + 13/13 byte-parity</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/debug-go">debug-go</a></h3>
+        <div class="pkg">port of debug 4.3.4</div>
+        <p>The namespace-based debug logger&#x27;s core.</p>
+        <div class="evidence">namespace-matching parity</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/ungap-structured-clone-go">ungap-structured-clone-go</a></h3>
+        <div class="pkg">port of @ungap/structured-clone 1.3.3</div>
+        <p>Structured clone (serialize/deserialize) including Map/Set/Date/RegExp.</p>
+        <div class="evidence">round-trip 29/0, structural 15/0</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/humanwhocodes-object-schema-go">humanwhocodes-object-schema-go</a></h3>
+        <div class="pkg">port of @humanwhocodes/object-schema 1.2.1</div>
+        <p>Object schema validation/merge strategies.</p>
+        <div class="evidence">parity suite green</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/nodelib-fs-stat-go">nodelib-fs-stat-go</a></h3>
+        <div class="pkg">port of @nodelib/fs.stat 2.0.5</div>
+        <p>Filesystem stat with a symlink policy.</p>
+        <div class="evidence">symlink-policy parity</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/isexe-go">isexe-go</a></h3>
+        <div class="pkg">port of isexe 2.0.0</div>
+        <p>Executable permission checks.</p>
+        <div class="evidence">permission-matrix parity</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/esutils-go">esutils-go</a></h3>
+        <div class="pkg">port of esutils 2.0.3</div>
+        <p>AST/code/keyword helpers used across the estools family.</p>
+        <div class="evidence">parity suite green</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/color-name-go">color-name-go</a></h3>
+        <div class="pkg">port of color-name 1.1.4</div>
+        <p>CSS colour-name table.</p>
+        <div class="evidence">148 entries, 0 mismatches</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/eslint-visitor-keys-go">eslint-visitor-keys-go</a></h3>
+        <div class="pkg">port of eslint-visitor-keys 3.4.3</div>
+        <p>The canonical ESTree visitor-keys table ESLint traverses by.</p>
+        <div class="evidence">table parity against the oracle</div>
+      </article>
+      </div>
+    </section>
+    <section id="tooling">
+      <h2>Tooling</h2>
+      <p class="blurb">The machinery that made the ports above affordable — and the ports of developer tooling in their own right.</p>
+      <div class="grid">
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/uplift">uplift</a></h3>
+        <div class="pkg">port of JS → Go toolchain</div>
+        <p>The pipeline used for every port: measure a JS codebase, resolve its npm→Go counterpart registry, scaffold a repo with a real parity harness, ingest .d.ts contracts, and transpile/lift where that is cheaper than hand-porting.</p>
+        <div class="evidence">registry verdicts (port / use_existing / stdlib / inline) so a leaf is assessed once, never re-derived</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/ts-go-morph">ts-go-morph</a></h3>
+        <div class="pkg">port of ts-morph</div>
+        <p>Go port of ts-morph (TypeScript AST manipulation) — the TypeScript-side counterpart of the parser chain.</p>
+        <div class="evidence">baseline suite against the original</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/go-gqlcodegen">go-gqlcodegen</a></h3>
+        <div class="pkg">port of GraphQL Code Generator</div>
+        <p>Native Go port of GraphQL Code Generator: byte-identical TypeScript output, ~90x faster cold start, no Node runtime.</p>
+        <div class="evidence">generated output byte-identical to the npm tool</div>
+      </article>
+      <article class="card">
+        <h3><a href="https://github.com/jclyons52/go-typewryter">go-typewryter</a></h3>
+        <div class="pkg">port of typewryter</div>
+        <p>Go port of the typewryter CLI for generating TypeScript types from data.</p>
+        <div class="evidence">output parity against the original CLI</div>
+      </article>
+      </div>
+    </section>
+
+    <section id="method" class="method">
+      <h2>How a port is verified</h2>
+      <ol>
+          <li>Vendor the original npm package next to the Go code — the oracle, not a reference to read.</li>
+          <li>Build a corpus of real inputs (valid, invalid, edge, non-ASCII) and a driver that runs the original package over it.</li>
+          <li>Run the same corpus through the Go implementation and diff the results: full JSON ASTs for parsers, message objects for linters, byte-for-byte output for code generators and fixers.</li>
+          <li>Treat any difference as a bug in the port. When the difference is caused by the original's own behaviour, encode that behaviour deliberately and say so in the README.</li>
+          <li>Commit only when the harness reports zero mismatches, and keep the number in the repo's README so it can be re-checked.</li>
+      </ol>
+    </section>
+
+    <footer>
+      Every repo above is open source and carries its own oracle harness.
+      The toolchain that produced them is <a href="https://github.com/jclyons52/uplift">uplift</a>.
+      <br>Built with <code>build_site.py</code> from <code>manifest.json</code> — no framework, one static page.
+    </footer>
+  </div>
+</body>
+</html>
