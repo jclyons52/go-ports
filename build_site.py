@@ -81,7 +81,8 @@ section > p.blurb { color: var(--muted); margin: 0 0 22px; max-width: 80ch; }
 .method li strong { color: var(--text); }
 footer { margin-top: 70px; padding-top: 22px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13.5px; }
 footer code { font-family: var(--mono); color: var(--text); }
-.stat-row { display: flex; gap: 26px; flex-wrap: wrap; margin: 22px 0 0; font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px 26px; margin: 22px 0 0; font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.stat-row > div { min-width: 0; }
 .stat-row b { display: block; font-size: 24px; color: var(--text); font-weight: 600; }
 .snippets { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); }
 .snippet { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 16px 18px; min-width: 0; }

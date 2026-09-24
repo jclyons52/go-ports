@@ -19,11 +19,11 @@
       },
       {
         "value": "17/17",
-        "label": "CLI scenarios byte-identical"
+        "label": "CLI scenarios identical"
       },
       {
         "value": "94.4%",
-        "label": "of 772 real npm files byte-identical"
+        "label": "real npm files byte-identical"
       },
       {
         "value": "0",
