@@ -92,7 +92,8 @@ footer code { font-family: var(--mono); color: var(--text); }
         <div><b>26</b>ports &amp; tools</div>
         <div><b>46</b>ESLint rules verified</div>
         <div><b>2,461</b>rule parity cases</div>
-        <div><b>14/14</b>CLI scenarios byte-identical</div>
+        <div><b>17/17</b>CLI scenarios byte-identical</div>
+        <div><b>94.4%</b>of 772 real npm files byte-identical</div>
         <div><b>0</b>tolerated mismatches</div>
       </div>
       <nav class="toc"><a href="#core">The ESLint chain</a> <a href="#leaves">Leaf packages</a> <a href="#tooling">Tooling</a> <a href="#consume">Using them</a> <a href="#method">How a port is verified</a></nav>
@@ -106,6 +107,7 @@ footer code { font-family: var(--mono); color: var(--text); }
           <li>46 ported rules (no-undef, no-unused-vars, prefer-const, semi, quotes, …) run over one traversal, with eslint-scope-go scope analysis behind them, gated by 2,461 oracle cases.</li>
           <li>`eslint-go --format stylish src` produces the same bytes as `eslint --format stylish src`: colours, columns, exit codes and the files rewritten by --fix.</li>
           <li>Message objects match field for field — including suggestions, fix ranges, and UTF-16 code-unit columns on non-ASCII input.</li>
+          <li>Dogfooded on real code: 772 shipped npm JavaScript files linted by both tools, 729 (94.4%) byte-identical and 0 crashes — down from 7 crashes and 134 differing files, with the six bugs it surfaced (a `"use strict"` panic, shebang handling, octal escapes, `env: node` scope structure, …) fixed rather than tolerated.</li>
           <li>21 leaf packages were ported first (espree, acorn, estraverse, esquery, eslint-scope, …) and are composing here.</li>
       </ul>
       <p style="margin:16px 0 0"><a href="https://github.com/jclyons52/eslint-go">https://github.com/jclyons52/eslint-go</a></p>
